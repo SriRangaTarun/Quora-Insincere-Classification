@@ -73,7 +73,7 @@ train_sequences = sequences[:np.int32(TRAIN_VAL_SPLIT*len(sequences))]
 NUM_TRANSFORMER_BLOCKS = 12
 model = BertForSequenceClassification.from_pretrained('bert-base-uncased').cuda()
 
-# Fine - Tune only 2 Transformer Blocks and the Pooling Layer due to compute restrictions.
+# Fine - Tune only 2 Transformer Blocks and the Pooling Layer due to compute restrictions
 
 for param in model.parameters():
   param.requires_grad = False
