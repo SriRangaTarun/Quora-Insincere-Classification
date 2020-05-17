@@ -8,13 +8,12 @@ from keras.utils import to_categorical
 from keras.preprocessing import sequence
 
 import torch
-from torch import LongTensor, FloatTensor, no_grad
-from torch.backends import cudnn
-from torch.nn import Module, Sequential, Linear, Sigmoid, ReLU, Dropout
+from torch.optim import Adam
 from torch.backends import cudnn
 from torch.utils import checkpoint
-from torch.optim import Adam
-
+from torch import LongTensor, FloatTensor, no_grad
+from torch.nn import Module, Sequential, Linear, Sigmoid, ReLU, Dropout
+    
 import torchsample
 import transformers
 from torchsample.modules import ModuleTrainer
@@ -42,7 +41,6 @@ for i in range(len(sentences)):
     sequences.append(tokenizer.convert_tokens_to_ids(tokenized_sentence))
 
 TRAIN_VAL_SPLIT = 0.8
-
 NUM_TEXT_FEATURES = 768
 MAX_SEQUENCE_LENGTH = 128
 
@@ -54,22 +52,21 @@ train_targets = targets[:np.int32(TRAIN_VAL_SPLIT*len(targets))]
 val_sequences = sequences[np.int32(TRAIN_VAL_SPLIT*len(sequences)):]
 train_sequences = sequences[:np.int32(TRAIN_VAL_SPLIT*len(sequences))]
 
-model = BertForSequenceClassification.from_pretrained('bert-base-uncased').cuda()
-
 NUM_TRANSFORMER_BLOCKS = 12
+model = BertForSequenceClassification.from_pretrained('bert-base-uncased').cuda()
 
 # Fine - Tune only 2 Transformer Blocks and the Pooling Layer.
 # Fine - Tune all parts of the model (excluding the Embeddings layer) when you have enough GPU !
 
 for param in model.parameters():
   param.requires_grad = False
-  
+
 for param in model.bert.encoder.layer[0].parameters():
   param.requires_grad = True
-  
+
 for param in model.bert.pooler.parameters():
   param.requires_grad = True
-  
+
 for param in model.bert.encoder.layer[NUM_TRANSFORMER_BLOCKS - 1].parameters():
   param.requires_grad = True
 
@@ -78,7 +75,6 @@ model.classifier = Sequential(Linear(in_features=NUM_TEXT_FEATURES, out_features
                               ReLU(), Linear(in_features=20, out_features=1, bias=True), Sigmoid()).cuda()
 
 cudnn.benchmark = True
-
 trainer = ModuleTrainer(model)
 
 NUM_EPOCHS = 2
